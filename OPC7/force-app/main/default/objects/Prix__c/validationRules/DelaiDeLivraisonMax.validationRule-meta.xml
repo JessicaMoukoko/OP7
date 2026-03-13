@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>DelaiDeLivraisonMax</fullName>
+    <active>true</active>
+    <errorConditionFormula>Delai_De_Livraison__c &gt; 15</errorConditionFormula>
+    <errorDisplayField>Delai_De_Livraison__c</errorDisplayField>
+    <errorMessage>Le Délai de livraison ne peut pas dépasser 15 jours !</errorMessage>
+</ValidationRule>

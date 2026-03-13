@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>TransporteurIdObligatoire</fullName>
+    <active>true</active>
+    <description>Regle de validation pour rendre obligatoire l&apos;Id du transporteur mais non modifiable par après</description>
+    <errorConditionFormula>AND(
+    ISNEW(),
+    ISBLANK(Identifiant__c)
+)</errorConditionFormula>
+    <errorDisplayField>Identifiant__c</errorDisplayField>
+    <errorMessage>Le champ ID du transporteur est obligatoire a la création</errorMessage>
+</ValidationRule>

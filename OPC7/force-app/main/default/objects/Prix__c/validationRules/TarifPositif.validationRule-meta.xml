@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>TarifPositif</fullName>
+    <active>true</active>
+    <description>Règle de validation pour vérifier qu&apos;il n&apos;y a pas de valeur négatives dans la tarification</description>
+    <errorConditionFormula>Tarif__c &lt;= 0</errorConditionFormula>
+    <errorDisplayField>Tarif__c</errorDisplayField>
+    <errorMessage>Le tarif doit être positif !</errorMessage>
+</ValidationRule>
