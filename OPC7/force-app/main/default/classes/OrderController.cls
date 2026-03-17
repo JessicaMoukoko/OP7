@@ -10,7 +10,8 @@ public with sharing class OrderController {
                 Quantity,
                 UnitPrice,
                 TotalPrice,
-                Product2Id
+                Product2Id,
+                OrderName__c
             FROM OrderItem WHERE orderId=:OrderId 
             WITH SECURITY_ENFORCED
         ];
@@ -20,16 +21,21 @@ public with sharing class OrderController {
     // Méthode pour valider les commandes
 
     public static void validateOrder(Order orderToValidate) {
-        Account AccountToValidate = AccountSelector.getAccountById(orderToValidate.AccountId);
+        Account account = AccountSelector.getAccountById(orderToValidate.AccountId);
+
         List<OrderItem> orderItems = getOrderProducts(orderToValidate.Id);
+        boolean result = true;
 
         // Validation basée sur le type de compte et le nombre d'articles
         if (orderToValidate.Status != 'Draft') {
-            if (AccountToValidate.AccountType__c == 'Particulier' && orderItems.size() < 3) {
+            if (account.AccountType__c == 'Particulier' && orderItems.size() < 3) {
                 orderToValidate.addError('Une commande d\'un particulier doit contenir au moins 3 articles');
-            } else if (AccountToValidate.AccountType__c == 'Professionnel' && orderItems.size() < 5) {
+                result = false;
+            } else if (account.AccountType__c == 'Professionnel' && orderItems.size() < 5) {
                 orderToValidate.addError('Une commande d\'un professionnel doit contenir au moins 5 articles');
+                result= false;
             }
         }
+
     }
 }
