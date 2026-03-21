@@ -7,23 +7,45 @@ public with sharing class TransporterSelector {
         return transporters;
 }
 
-  public static Transporteur__c GetCheapestTransporter(string pays) {
+  public static Transporteur__c GetCheapestTransporter(string pays, string accountType) {
+    // Find the cheapest price for the country with a transporter that accepts the account type
+    List<Prix__c> compatiblePrices = [SELECT Transporteur__c, Tarif__c 
+                                       FROM Prix__c 
+                                       WHERE Pays__c = :pays 
+                                       AND Transporteur__c IN (
+                                           SELECT Id FROM Transporteur__c 
+                                           WHERE Type_Client__c INCLUDES (:accountType)
+                                       )
+                                       ORDER BY Tarif__c ASC 
+                                       LIMIT 1];
     
-    Prix__c cheapestPrice = [SELECT Transporteur__c, Tarif__c FROM Prix__c 
-                            WHERE Pays__c = :pays 
-                            ORDER BY Tarif__c ASC LIMIT 1];
+    if (compatiblePrices.isEmpty()) {
+      return null;
+    }
     
     return [SELECT Id, Name, Type_Client__c, Identifiant__c FROM Transporteur__c
-            WHERE Id = :cheapestPrice.Transporteur__c LIMIT 1];
+            WHERE Id = :compatiblePrices[0].Transporteur__c 
+            LIMIT 1];
   }
 
-  public static Transporteur__c GetFastestTransporter(string pays) {
+  public static Transporteur__c GetFastestTransporter(string pays, string accountType) {
+    // Find the fastest delivery for the country with a transporter that accepts the account type
+    List<Prix__c> compatiblePrices = [SELECT Transporteur__c, Delai_De_Livraison__c 
+                                       FROM Prix__c 
+                                       WHERE Pays__c = :pays 
+                                       AND Transporteur__c IN (
+                                           SELECT Id FROM Transporteur__c 
+                                           WHERE Type_Client__c INCLUDES (:accountType)
+                                       )
+                                       ORDER BY Delai_De_Livraison__c ASC 
+                                       LIMIT 1];
     
-    Prix__c fastestPrice = [SELECT Transporteur__c, Delai_De_Livraison__c FROM Prix__c 
-                           WHERE Pays__c = :pays 
-                           ORDER BY Delai_De_Livraison__c ASC LIMIT 1];
+    if (compatiblePrices.isEmpty()) {
+      return null;
+    }
     
     return [SELECT Id, Name, Type_Client__c, Identifiant__c FROM Transporteur__c
-            WHERE Id = :fastestPrice.Transporteur__c LIMIT 1];
+            WHERE Id = :compatiblePrices[0].Transporteur__c 
+            LIMIT 1];
   }
 }

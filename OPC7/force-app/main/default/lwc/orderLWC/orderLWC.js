@@ -1,6 +1,8 @@
 import { LightningElement, api, wire  } from 'lwc';  
 import getOrderProducts from '@salesforce/apex/OrderController.getOrderProducts';
 import IsResponsableCommercialUser from '@salesforce/apex/ProfileController.IsResponsableCommercialUser';
+import createCheapestLivraisonFromOrderId from '@salesforce/apex/LivraisonController.createCheapestLivraisonFromOrderId';
+import createFastestLivraisonFromOrderId from '@salesforce/apex/LivraisonController.createFastestLivraisonFromOrderId';
 import { refreshApex } from '@salesforce/apex';
 import USER_ID from '@salesforce/user/Id';
 
@@ -19,18 +21,20 @@ OrderProducts;
 error;
 wiredOrderProductsResults;
 wiredProfileResults;
-
+clickedButtonLabelMoinsCher = "Créer une livraison avec le transporteur le moins cher";
+clickedButtonLabelPlusRapide = "Créer une livraison avec le transporteur le plus rapide";
 
              // colonnes pour le profil Responsable Commercial
 
-    columnsResponsableCommercial = [ { label: OrderName, fieldName: 'OrderName__c', type: 'text' },
-        { label: UnitPrice, fieldName: 'UnitPrice', type: 'number' },
-        { label: totalPrice, fieldName: 'TotalPrice', type: 'number' },
-        { label: ProductQuantity, fieldName: 'Quantity', type: 'number'},
+    columnsResponsableCommercial = [
+        { label: 'Nom du Produit', fieldName: 'Product2.Name', type: 'text' },
+        { label: 'Prix Unitaire', fieldName: 'UnitPrice', type: 'currency' },
+        { label: 'Quantité', fieldName: 'Quantity', type: 'number'},
+        { label: 'Prix Total', fieldName: 'TotalPrice', type: 'currency' }
     ];
 
     extrabuttons = [{
-        label: Delete,
+        label: 'Delete',
         type: 'button-icon',
         initialWidth: 90,
         typeAttributes: {
@@ -40,11 +44,11 @@ wiredProfileResults;
             variant: 'border-filled',
             alternativeText: 'Supprimer'
         } },
-    { label: ViewProduct,
+    { label: 'ViewProduct',
          type: 'button', 
             initialWidth: 160,
          typeAttributes: { 
-            label: viewProductButton,
+            label: 'View Product',
             iconName: 'utility:preview',
              name: 'preview',
               title: 'Voir Produit',
@@ -76,13 +80,13 @@ wiredOpportunities(result) {
 
 @wire(IsResponsableCommercialUser, { userId: '$userId' })
     wiredProfileResults({ data }) {
-        this.isResponsableCommercialUser = data === true;
+        this.IsResponsableCommercialUser = data === true;
     }
 
    // propriété calculée pour afficher le tableau Responsable Commercial 
 
  get isResponsableCommercialTable() {
-    return this.isResponsableCommercialUser;
+    return this.IsResponsableCommercialUser;
 }
 
    // gestion des actions sur les lignes du tableau
@@ -98,4 +102,27 @@ wiredOpportunities(result) {
         this.navigateToProduct(row.IdDuProduit__c);
     }
 }
+
+    handleClickMoinsCher(event) {
+        this.clickedButtonLabel = event.target.label;
+        createCheapestLivraisonFromOrderId({ orderId: this.recordId })
+            .then(() => {
+                refreshApex(this.wiredOrderProductsResults);
+            })
+            .catch(error => {
+                console.error('Erreur création livraison :', error);
+            });
+    }
+
+    handleClickPlusRapide(event) {
+        this.clickedButtonLabel = event.target.label;
+        createFastestLivraisonFromOrderId({ orderId: this.recordId })
+            .then(() => {
+                refreshApex(this.wiredOrderProductsResults);
+            })
+            .catch(error => {
+                console.error('Erreur création livraison :', error);
+            });
+    }
+
 }
