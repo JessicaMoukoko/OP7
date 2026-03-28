@@ -27,7 +27,7 @@ public with sharing class OrderController {
 
         List<OrderItem> orderItems = getOrderProducts(orderToValidate.Id);
         // Validation basée sur le type de compte et le nombre d'articles
-        if (orderToValidate.Status != 'Draft') {
+        if (orderToValidate.Status == 'Draft') {
             if (account.AccountType__c == 'Particulier' && orderItems.size() < 3) {
                 orderToValidate.addError('Une commande d\'un particulier doit contenir au moins 3 articles');
             } else if (account.AccountType__c == 'Professionnel' && orderItems.size() < 5) {

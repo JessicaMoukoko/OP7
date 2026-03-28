@@ -36,7 +36,7 @@ public with sharing class LivraisonController {
         @AuraEnabled
         public static void createLivraisonWithSelectedTransporter(Order order, Prix__c prix) {
 
-        List<Transporteur__c> SelectedTransporter = TransporterSelector.getTransporterByCountry(prix.Pays__c);
+        List<Transporteur__c> SelectedTransporter = TransporterSelector.getTransporterByCountry(prix.Pays__c, order.Account.AccountType__c);
             
             if (SelectedTransporter != null) {
                 Livraison__c selectedLivraison = new Livraison__c();
@@ -110,4 +110,49 @@ public with sharing class LivraisonController {
         }
     }
     
+    @AuraEnabled
+public static void createSelectedLivraisonFromOrderId(String orderId, Id transporterId) {
+    try {
+        if (orderId == null || transporterId == null) {
+            throw new AuraHandledException('Missing parameters');
+        }
+
+        Order order = [
+            SELECT Id, AccountId, BillingAddress, Account.AccountType__c 
+            FROM Order 
+            WHERE Id = :orderId 
+            WITH SECURITY_ENFORCED 
+            LIMIT 1
+        ];
+        
+        String country = order.BillingAddress.getCountry();
+
+        List<Prix__c> prixList = [
+            SELECT Id, Pays__c, Tarif__c, Transporteur__c
+            FROM Prix__c 
+            WHERE Pays__c = :country 
+            AND Transporteur__c = :transporterId
+            AND Transporteur__c IN (
+                SELECT Id FROM Transporteur__c 
+                WHERE Type_Client__c INCLUDES (:order.Account.AccountType__c)
+            )
+            WITH SECURITY_ENFORCED 
+            LIMIT 1
+        ];
+        
+        if (!prixList.isEmpty()) {
+            createLivraisonWithSelectedTransporter(order, prixList[0]);
+        } else {
+            throw new AuraHandledException(
+                'Aucun prix trouvé pour ce transporteur et ce pays.'
+            );
+        }
+
+    } catch (Exception e) {
+        throw new AuraHandledException(
+            'Erreur lors de la création de la livraison : ' + e.getMessage()
+        );
+    }
+}
+
 }

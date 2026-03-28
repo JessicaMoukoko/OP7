@@ -1,11 +1,13 @@
-trigger OrderTrigger on Order (before update, after update) {
-    // Validate orders BEFORE update when OrderItems already exist
-    // For before update, we can access the OrderItems since they were already created
-    if (Trigger.isBefore && Trigger.isUpdate) {
+trigger OrderTrigger on Order (before insert, before update, after update) {
+    
+    if (Trigger.isBefore && (Trigger.isInsert || Trigger.isUpdate)) {
         for (Order order : Trigger.new) {
-            OrderController.validateOrder(order);
+            if (Trigger.isUpdate) {
+                Order oldOrder = Trigger.oldMap.get(order.Id);
+                if (oldOrder.Status == 'Draft' && order.Status != 'Draft') {
+                    OrderController.validateOrder(order);
+                }
+            }
         }
     }
-
-    // TODO: Select the best transporter based on the choice made on the order
 }

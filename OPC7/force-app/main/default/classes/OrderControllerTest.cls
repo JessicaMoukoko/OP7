@@ -3,53 +3,38 @@ public class OrderControllerTest {
     
     @testSetup
     static void setupTestData() {
+        // Create test products first
+        Product2 product1 = TestDataFactory.createProduct('Test Product 1');
+        Product2 product2 = TestDataFactory.createProduct('Test Product 2');
+        Product2 product3 = TestDataFactory.createProduct('Test Product 3');
+        Product2 product4 = TestDataFactory.createProduct('Test Product 4');
+        Product2 product5 = TestDataFactory.createProduct('Test Product 5');
+        
+        // Create test price book entry
+        PricebookEntry standardPBEntry = TestDataFactory.createPricebookEntry(
+            Test.getStandardPricebookId(),
+            product1.Id,
+            100.00
+        );
+
+        // Create more pricebook entries for all products
+        TestDataFactory.createPricebookEntry(Test.getStandardPricebookId(), product2.Id, 100.00);
+        TestDataFactory.createPricebookEntry(Test.getStandardPricebookId(), product3.Id, 100.00);
+        TestDataFactory.createPricebookEntry(Test.getStandardPricebookId(), product4.Id, 100.00);
+        TestDataFactory.createPricebookEntry(Test.getStandardPricebookId(), product5.Id, 100.00);
+        
         // Create test account
-        Account account = new Account(
-            Name = 'Test Account',
-            Type = 'Prospect',
-            AccountType__c = 'Particulier'
-        );
-        insert account;
+        Account account = TestDataFactory.createAccount('Test Account', 'Particulier');
         
-        // Create test order
-        Order order = new Order(
-            AccountId = account.Id,
-            EffectiveDate = Date.today(),
-            Status = 'Draft'
-        );
-        insert order;
+        // Create order and items together within startTest/stopTest to manage trigger execution
+        Test.startTest();
+        Order order = TestDataFactory.createOrder(account.Id, 'Draft');
         
-        // Create test products
-        List<Product2> products = new List<Product2>();
-        for (Integer i = 0; i < 5; i++) {
-            products.add(new Product2(
-                Name = 'Test Product ' + i,
-                IsActive = true
-            ));
-        }
-        insert products;
-        
-        // Create test price book entries
-        PricebookEntry standardPBEntry = new PricebookEntry(
-            Pricebook2Id = Test.getStandardPricebookId(),
-            Product2Id = products[0].Id,
-            UnitPrice = 100.00,
-            IsActive = true
-        );
-        insert standardPBEntry;
-        
-        // Create order items
-        List<OrderItem> orderItems = new List<OrderItem>();
-        for (Integer i = 0; i < 3; i++) {
-            orderItems.add(new OrderItem(
-                OrderId = order.Id,
-                Product2Id = products[i].Id,
-                Quantity = 1,
-                UnitPrice = 100.00,
-                PricebookEntryId = standardPBEntry.Id
-            ));
-        }
-        insert orderItems;
+        // Create order items to satisfy validation
+        TestDataFactory.createOrderItem(order.Id, product1.Id, standardPBEntry.Id, 1, 100.00);
+        TestDataFactory.createOrderItem(order.Id, product2.Id, standardPBEntry.Id, 1, 100.00);
+        TestDataFactory.createOrderItem(order.Id, product3.Id, standardPBEntry.Id, 1, 100.00);
+        Test.stopTest();
     }
     
     @isTest
@@ -58,7 +43,9 @@ public class OrderControllerTest {
         Order order = [SELECT Id FROM Order LIMIT 1];
         
         // Act
+        test.startTest();
         List<OrderItem> products = OrderController.getOrderProducts(order.Id);
+        test.stopTest();
         
         // Assert
         Assert.isNotNull(products, 'Order products list should not be null');
@@ -68,17 +55,13 @@ public class OrderControllerTest {
     @isTest
     static void testGetOrderProducts_NoProducts() {
         // Arrange
-        Account account = new Account(Name = 'Empty Order Account');
-        insert account;
-        Order emptyOrder = new Order(
-            AccountId = account.Id,
-            EffectiveDate = Date.today(),
-            Status = 'Draft'
-        );
-        insert emptyOrder;
+        Account account = TestDataFactory.createAccount('Empty Order Account', 'Particulier');
+        Order emptyOrder = TestDataFactory.createOrder(account.Id, 'Draft');
         
         // Act
+        test.startTest();
         List<OrderItem> products = OrderController.getOrderProducts(emptyOrder.Id);
+        test.stopTest();
         
         // Assert
         Assert.isNotNull(products, 'List should not be null');
@@ -102,56 +85,20 @@ public class OrderControllerTest {
         Assert.isNotNull(item.UnitPrice, 'OrderItem should have a UnitPrice');
     }
     
-    @isTest
-    static void testValidateOrder_Draft_NoValidation() {
-        // Arrange
-        Order order = new Order(
-            AccountId = [SELECT Id FROM Account LIMIT 1].Id,
-            EffectiveDate = Date.today(),
-            Status = 'Draft'
-        );
-        
-        // Act & Assert
-        try {
-            OrderController.validateOrder(order);
-            Assert.isTrue(true, 'Draft orders should not trigger validation');
-        } catch (Exception e) {
-            Assert.fail('Draft order validation should not throw an exception');
-        }
-    }
     
     @isTest
     static void testValidateOrder_ParticulierMinimumItems() {
         // Arrange
-        Account account = new Account(
-            Name = 'Particulier Account',
-            Type = 'Prospect',
-            AccountType__c = 'Particulier'
-        );
-        insert account;
-        
-        Order order = new Order(
-            AccountId = account.Id,
-            EffectiveDate = Date.today(),
-            Status = 'Activated'
-        );
-        insert order;
+        Account account = TestDataFactory.createAccount('Particulier Account', 'Particulier');
+        Order order = TestDataFactory.createOrder(account.Id, 'Draft');
+
         
         // Create only 2 order items (less than minimum of 3)
         PricebookEntry pbe = [SELECT Id FROM PricebookEntry LIMIT 1];
-        Product2 product = [SELECT Id FROM Product2 LIMIT 1];
-        
-        List<OrderItem> items = new List<OrderItem>();
-        for (Integer i = 0; i < 2; i++) {
-            items.add(new OrderItem(
-                OrderId = order.Id,
-                Product2Id = product.Id,
-                Quantity = 1,
-                UnitPrice = 100.00,
-                PricebookEntryId = pbe.Id
-            ));
+        List<Product2> products = [SELECT Id FROM Product2 LIMIT 2];
+        for (Product2 product : products) {
+            TestDataFactory.createOrderItem(order.Id, product.Id, pbe.Id, 1, 100.00);
         }
-        insert items;
         
         Order orderToValidate = [SELECT Id, AccountId, Status FROM Order WHERE Id = :order.Id];
         
@@ -167,35 +114,15 @@ public class OrderControllerTest {
     @isTest
     static void testValidateOrder_ParticulierValidOrder() {
         // Arrange
-        Account account = new Account(
-            Name = 'Valid Particulier',
-            Type = 'Prospect',
-            AccountType__c = 'Particulier'
-        );
-        insert account;
-        
-        Order order = new Order(
-            AccountId = account.Id,
-            EffectiveDate = Date.today(),
-            Status = 'Activated'
-        );
-        insert order;
+        Account account = TestDataFactory.createAccount('Valid Particulier', 'Particulier');
+        Order order = TestDataFactory.createOrder(account.Id, 'Draft');
         
         // Create 3 order items (meets minimum requirement)
         PricebookEntry pbe = [SELECT Id FROM PricebookEntry LIMIT 1];
-        Product2 product = [SELECT Id FROM Product2 LIMIT 1];
-        
-        List<OrderItem> items = new List<OrderItem>();
-        for (Integer i = 0; i < 3; i++) {
-            items.add(new OrderItem(
-                OrderId = order.Id,
-                Product2Id = product.Id,
-                Quantity = 1,
-                UnitPrice = 100.00,
-                PricebookEntryId = pbe.Id
-            ));
+        List<Product2> products = [SELECT Id FROM Product2 LIMIT 3];
+        for (Product2 product : products) {
+            TestDataFactory.createOrderItem(order.Id, product.Id, pbe.Id, 1, 100.00);
         }
-        insert items;
         
         Order orderToValidate = [SELECT Id, AccountId, Status FROM Order WHERE Id = :order.Id];
         
@@ -211,35 +138,15 @@ public class OrderControllerTest {
     @isTest
     static void testValidateOrder_ProfessionnelMinimumItems() {
         // Arrange
-        Account account = new Account(
-            Name = 'Professionnel Account',
-            Type = 'Prospect',
-            AccountType__c = 'Professionnel'
-        );
-        insert account;
-        
-        Order order = new Order(
-            AccountId = account.Id,
-            EffectiveDate = Date.today(),
-            Status = 'Activated'
-        );
-        insert order;
+        Account account = TestDataFactory.createAccount('Professionnel Account', 'Professionnel');
+        Order order = TestDataFactory.createOrder(account.Id, 'Draft');
         
         // Create only 3 order items (less than minimum of 5)
         PricebookEntry pbe = [SELECT Id FROM PricebookEntry LIMIT 1];
-        Product2 product = [SELECT Id FROM Product2 LIMIT 1];
-        
-        List<OrderItem> items = new List<OrderItem>();
-        for (Integer i = 0; i < 3; i++) {
-            items.add(new OrderItem(
-                OrderId = order.Id,
-                Product2Id = product.Id,
-                Quantity = 1,
-                UnitPrice = 100.00,
-                PricebookEntryId = pbe.Id
-            ));
+        List<Product2> products = [SELECT Id FROM Product2 LIMIT 3];
+        for (Product2 product : products) {
+            TestDataFactory.createOrderItem(order.Id, product.Id, pbe.Id, 1, 100.00);
         }
-        insert items;
         
         Order orderToValidate = [SELECT Id, AccountId, Status FROM Order WHERE Id = :order.Id];
         
@@ -255,35 +162,15 @@ public class OrderControllerTest {
     @isTest
     static void testValidateOrder_ProfessionnelValidOrder() {
         // Arrange
-        Account account = new Account(
-            Name = 'Valid Professionnel',
-            Type = 'Prospect',
-            AccountType__c = 'Professionnel'
-        );
-        insert account;
-        
-        Order order = new Order(
-            AccountId = account.Id,
-            EffectiveDate = Date.today(),
-            Status = 'Activated'
-        );
-        insert order;
+        Account account = TestDataFactory.createAccount('Valid Professionnel', 'Professionnel');
+        Order order = TestDataFactory.createOrder(account.Id, 'Draft');
         
         // Create 5 order items (meets minimum requirement)
         PricebookEntry pbe = [SELECT Id FROM PricebookEntry LIMIT 1];
-        Product2 product = [SELECT Id FROM Product2 LIMIT 1];
-        
-        List<OrderItem> items = new List<OrderItem>();
-        for (Integer i = 0; i < 5; i++) {
-            items.add(new OrderItem(
-                OrderId = order.Id,
-                Product2Id = product.Id,
-                Quantity = 1,
-                UnitPrice = 100.00,
-                PricebookEntryId = pbe.Id
-            ));
+        List<Product2> products = [SELECT Id FROM Product2 LIMIT 5];
+        for (Product2 product : products) {
+            TestDataFactory.createOrderItem(order.Id, product.Id, pbe.Id, 1, 100.00);
         }
-        insert items;
         
         Order orderToValidate = [SELECT Id, AccountId, Status FROM Order WHERE Id = :order.Id];
         

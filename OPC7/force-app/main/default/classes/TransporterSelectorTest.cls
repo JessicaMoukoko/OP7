@@ -4,57 +4,23 @@ public class TransporterSelectorTest {
     @testSetup
     static void setupTestData() {
         // Create test transporters
-        List<Transporteur__c> transporters = new List<Transporteur__c>();
-        transporters.add(new Transporteur__c(
-            Name = 'Transporter 1',
-            Type_Client__c = 'Particulier;Professionnel',
-            Identifiant__c = 'T001'
-        ));
-        transporters.add(new Transporteur__c(
-            Name = 'Transporter 2',
-            Type_Client__c = 'Particulier',
-            Identifiant__c = 'T002'
-        ));
-        transporters.add(new Transporteur__c(
-            Name = 'Transporter 3',
-            Type_Client__c = 'Professionnel',
-            Identifiant__c = 'T003'
-        ));
-        insert transporters;
+        Transporteur__c transporter1 = TestDataFactory.createTransporter('Transporter 1', 'Particulier;Professionnel', 'T001');
+        Transporteur__c transporter2 = TestDataFactory.createTransporter('Transporter 2', 'Particulier', 'T002');
+        Transporteur__c transporter3 = TestDataFactory.createTransporter('Transporter 3', 'Professionnel', 'T003');
         
-        // Create test prices
-        List<Prix__c> prices = new List<Prix__c>();
-        prices.add(new Prix__c(
-            Pays__c = 'France',
-            Transporteur__c = transporters[0].Id,
-            Tarif__c = 50.00,
-            Delai_De_Livraison__c = 2
-        ));
-        prices.add(new Prix__c(
-            Pays__c = 'France',
-            Transporteur__c = transporters[1].Id,
-            Tarif__c = 30.00,
-            Delai_De_Livraison__c = 3
-        ));
-        prices.add(new Prix__c(
-            Pays__c = 'France',
-            Transporteur__c = transporters[2].Id,
-            Tarif__c = 80.00,
-            Delai_De_Livraison__c = 1
-        ));
-        prices.add(new Prix__c(
-            Pays__c = 'Germany',
-            Transporteur__c = transporters[0].Id,
-            Tarif__c = 60.00,
-            Delai_De_Livraison__c = 5
-        ));
-        insert prices;
+        // Create test prices for France
+        TestDataFactory.createPrice('France', transporter1.Id, 50.00, 2);
+        TestDataFactory.createPrice('France', transporter2.Id, 30.00, 3);
+        TestDataFactory.createPrice('France', transporter3.Id, 80.00, 1);
+        TestDataFactory.createPrice('Germany', transporter1.Id, 60.00, 5);
     }
     
     @isTest
     static void testGetTransporterByCountry_Success() {
         // Act
-        List<Transporteur__c> transporters = TransporterSelector.getTransporterByCountry('France');
+        Test.startTest();
+        List<Transporteur__c> transporters = TransporterSelector.getTransporterByCountry('France','Particulier');
+        Test.stopTest();
         
         // Assert
         Assert.isNotNull(transporters, 'Transporter list should not be null');
@@ -64,7 +30,7 @@ public class TransporterSelectorTest {
     @isTest
     static void testGetTransporterByCountry_NoResults() {
         // Act
-        List<Transporteur__c> transporters = TransporterSelector.getTransporterByCountry('NonExistentCountry');
+        List<Transporteur__c> transporters = TransporterSelector.getTransporterByCountry('NonExistentCountry','Particulier');
         
         // Assert
         Assert.isNotNull(transporters, 'List should not be null');
@@ -115,7 +81,7 @@ public class TransporterSelectorTest {
         Transporteur__c fastest = TransporterSelector.GetFastestTransporter('France', 'Particulier');
         
         // Assert
-        Assert.isNotNull(fastest, 'Should return a transporter for personal account type');
+        Assert.isNotNull(fastest, 'Should return a transporter for Particulier account type');
     }
     
     @isTest

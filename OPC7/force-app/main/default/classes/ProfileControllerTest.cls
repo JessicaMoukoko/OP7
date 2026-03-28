@@ -1,60 +1,36 @@
 @isTest
-public class ProfileControllerTest {
-    
+public with sharing class ProfileControllerTest {
+
+    // Test de la méthode isResponsableCommercialUser
+
     @isTest
-    static void testIsResponsableCommercialUser_WithPermission() {
-        // Note: This test assumes that the current user or the test user has the permission
-        // In a real scenario, you might need to create a user with specific permission set
-        
-        // Act
-        Test.startTest();
-        boolean hasPermission = ProfileController.IsResponsableCommercialUser(UserInfo.getUserId());
-        Test.stopTest();
-        
-        // Assert
-        Assert.isNotNull(hasPermission, 'Should return a boolean value');
-        // The result depends on whether the test user has the permission
+    public static void IsResponsableCommercialUserTest() {
+
+User user = testDataFactory.createUser();
+PermissionSetAssignment psa = testDataFactory.CreatePermissionSetAssignmentResponsableCommercial();
+
+Test.startTest();
+Boolean isResponsableCommercial = ProfileController.isResponsableCommercialUser(user.Id);
+Test.stopTest();
+
+System.assertequals(true,isResponsableCommercial);
+
+}
+
+// Test de la méthode isResponsableCommercialUser pour un utilisateur non responsable commercial
+
+    @isTest
+public static void IsNotResponsableCommercialUserTest() {
+
+User user = testDataFactory.createUser();
+PermissionSetAssignment psa = testDataFactory.CreatePermissionSetAssignmentNotResponsableCommercial();
+
+try {
+   ProfileController.isResponsableCommercialUser(user.Id);
     }
-    
-    @isTest
-    static void testIsResponsableCommercialUser_ReturnsBoolean() {
-        // Act
-        Test.startTest();
-        boolean result = ProfileController.IsResponsableCommercialUser(UserInfo.getUserId());
-        Test.stopTest();
-        
-        // Assert
-        Assert.isNotNull(result, 'Result should not be null');
-        Assert.isTrue(result instanceof Boolean, 'Result should be a boolean');
-    }
-    
-    @isTest
-    static void testIsResponsableCommercialUser_WithCurrentUserId() {
-        // Arrange
-        Id currentUserId = UserInfo.getUserId();
-        
-        // Act
-        Test.startTest();
-        boolean result = ProfileController.IsResponsableCommercialUser(currentUserId);
-        Test.stopTest();
-        
-        // Assert - The result will vary based on the user's permission set
-        Assert.isNotNull(result, 'Method should return a value');
-    }
-    
-    @isTest
-    static void testIsResponsableCommercialUser_Callable() {
-        // This test verifies the method is callable and @AuraEnabled(cacheable=true)
-        // without throwing any exceptions
-        
-        // Act & Assert
-        try {
-            Test.startTest();
-            boolean result = ProfileController.IsResponsableCommercialUser(UserInfo.getUserId());
-            Test.stopTest();
-            Assert.isTrue(true, 'Method should be callable'); 
-        } catch (Exception e) {
-            Assert.fail('Method should not throw an exception: ' + e.getMessage());
+
+catch (QueryException e) {
+            Assert.isTrue(e.getMessage().contains('no rows for assignment'), 'Should throw QueryException');
         }
-    }
+}
 }
