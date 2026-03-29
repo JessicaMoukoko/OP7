@@ -121,4 +121,84 @@ public class LivraisonControllerTest {
         Assert.areEqual(prix.Id, livraison.prix__c, 'Prix ID should match');
         Assert.areEqual('En cours', livraison.Statut__c, 'Status should be "En cours"');
     }
+
+    @isTest
+    static void testCreateLivraison_success() {
+
+        User user = TestDataFactory.createUser();
+
+        System.runAs(user) {
+
+            Account acc = TestDataFactory.createAccount('Test Account', 'Professionnel');
+
+            Order ord = TestDataFactory.createOrder(acc.Id, 'Draft');
+
+            Transporteur__c transporter = TestDataFactory.createTransporter(
+                'Transporteur 1',
+                'Professionnel',
+                'TR001'
+            );
+
+            Prix__c prix = TestDataFactory.createPrice(
+                'France',
+                transporter.Id,
+                100,
+                3
+            );
+
+            Test.startTest();
+
+            LivraisonController.createSelectedLivraisonFromOrderId(
+                ord.Id,
+                transporter.Id
+            );
+
+            Test.stopTest();
+
+            List<Livraison__c> livraisons = [
+                SELECT Id
+                FROM Livraison__c
+                WHERE Order__c = :ord.Id
+            ];
+
+            System.assertEquals(1, livraisons.size(),
+                'A livraison should have been created');
+        }
+    }
+
+    @isTest
+    static void testCreateLivraison_noPrix() {
+
+        User user = TestDataFactory.createUser();
+
+        System.runAs(user) {
+
+            Account acc = TestDataFactory.createAccount('Test Account', 'Professionnel');
+            Order ord = TestDataFactory.createOrder(acc.Id, 'Draft');
+
+            Transporteur__c transporter = TestDataFactory.createTransporter(
+                'Transporteur 1',
+                'Professionnel',
+                'TR001'
+            );
+
+
+            Test.startTest();
+
+            try {
+                LivraisonController.createSelectedLivraisonFromOrderId(
+                    ord.Id,
+                    transporter.Id
+                );
+                System.assert(false, 'Exception should have been thrown');
+            } catch (AuraHandledException e) {
+                System.assert(
+                    e.getMessage().contains('Script'),
+                    'Wrong exception message: ' + e.getMessage()
+                );
+            }
+
+            Test.stopTest();
+        }
+    }
 }

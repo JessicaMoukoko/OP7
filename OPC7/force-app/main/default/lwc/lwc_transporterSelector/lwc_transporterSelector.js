@@ -1,9 +1,11 @@
 import { LightningElement, api, wire } from 'lwc';
 import { getRecord } from 'lightning/uiRecordApi';
+import IsResponsableCommercialUser from '@salesforce/apex/ProfileController.IsResponsableCommercialUser';
 import getTransporterByCountry from '@salesforce/apex/TransporterSelector.getTransporterByCountry';
 import createSelectedLivraisonFromOrderId from '@salesforce/apex/LivraisonController.createSelectedLivraisonFromOrderId';
 import createCheapestLivraisonFromOrderId from '@salesforce/apex/LivraisonController.createCheapestLivraisonFromOrderId';
 import createFastestLivraisonFromOrderId from '@salesforce/apex/LivraisonController.createFastestLivraisonFromOrderId';
+import USER_ID from '@salesforce/user/Id';
 const FIELDS = ['Order.BillingCountry', 'Order.Account.AccountType__c'];
 export default class Lwc_transporterSelector extends LightningElement {
  
@@ -12,11 +14,22 @@ export default class Lwc_transporterSelector extends LightningElement {
     selectedOption;
     displayAutresTransporters = false;
     selectedTransporter;
-    billingCountry;       // Will store the country
+    billingCountry;  // will store the country from the Order record
+    isResponsableCommercial = false;     
+
+    @wire(IsResponsableCommercialUser, { userId: USER_ID })
+    wiredProfileResults({ data, error }) {
+    if (data) {
+        this.isResponsableCommercial = data === true;
+    } else if (error) {
+        console.error('Erreur récupération permission:', error);
+        this.isResponsableCommercial = false;
+    }
+}
 
     // Wire the Order record
-   @wire(getRecord, { recordId: '$recordId', fields: FIELDS })
-wiredOrder({ error, data }) {
+    @wire(getRecord, { recordId: '$recordId', fields: FIELDS })
+    wiredOrder({ error, data }) {
     if (data && data.fields && data.fields.BillingCountry) {
         this.billingCountry = data.fields.BillingCountry.value?.trim();
          this.accountType = data.fields.Account.value.fields.AccountType__c.value;
@@ -99,7 +112,7 @@ wiredOrder({ error, data }) {
 }
 
 
-handleTransporterChange(event) {
+    handleTransporterChange(event) {
     this.selectedTransporter = event.detail.value;
 
     console.log('Selected transporter Id:', this.selectedTransporter);

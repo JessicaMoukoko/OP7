@@ -139,31 +139,5 @@ insert psa;
 return psa;
 }
 
-// crée une permission set assignment pour un utilisateur non responsable commercial
-
-
-    public static PermissionSetAssignment CreatePermissionSetAssignmentNotResponsableCommercial() {
-
-  User user = createUser();
-  Id userId = user.Id;
-
-  String permSetApiName = 'NotResponsableCommercial';
-
-  PermissionSet ps = [
-     SELECT Id,Name
-     FROM PermissionSet
-     WHERE Name = :permSetApiName
-    LIMIT 1
-];
-
-PermissionSetAssignment psa = new PermissionSetAssignment(
-    AssigneeId = userId,
-    PermissionSetId = ps.Id
-);
-
-insert psa;
-return psa;
-}
-
 }
 

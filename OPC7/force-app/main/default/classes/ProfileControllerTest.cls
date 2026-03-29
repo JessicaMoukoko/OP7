@@ -6,11 +6,10 @@ public with sharing class ProfileControllerTest {
     @isTest
     public static void IsResponsableCommercialUserTest() {
 
-User user = testDataFactory.createUser();
 PermissionSetAssignment psa = testDataFactory.CreatePermissionSetAssignmentResponsableCommercial();
 
 Test.startTest();
-Boolean isResponsableCommercial = ProfileController.isResponsableCommercialUser(user.Id);
+Boolean isResponsableCommercial = ProfileController.isResponsableCommercialUser(psa.AssigneeId);
 Test.stopTest();
 
 System.assertequals(true,isResponsableCommercial);
@@ -19,18 +18,14 @@ System.assertequals(true,isResponsableCommercial);
 
 // Test de la méthode isResponsableCommercialUser pour un utilisateur non responsable commercial
 
-    @isTest
-public static void IsNotResponsableCommercialUserTest() {
+  @isTest
+static void testNotResponsableCommercialUser() {
+    User user = testDataFactory.createUser();
 
-User user = testDataFactory.createUser();
-PermissionSetAssignment psa = testDataFactory.CreatePermissionSetAssignmentNotResponsableCommercial();
+    // DO NOT assign permission set
 
-try {
-   ProfileController.isResponsableCommercialUser(user.Id);
-    }
+    Boolean result = ProfileController.isResponsableCommercialUser(user.Id);
 
-catch (QueryException e) {
-            Assert.isTrue(e.getMessage().contains('no rows for assignment'), 'Should throw QueryException');
-        }
+    System.assertEquals(false, result);
 }
 }

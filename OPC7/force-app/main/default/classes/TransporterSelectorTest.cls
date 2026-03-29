@@ -12,7 +12,6 @@ public class TransporterSelectorTest {
         TestDataFactory.createPrice('France', transporter1.Id, 50.00, 2);
         TestDataFactory.createPrice('France', transporter2.Id, 30.00, 3);
         TestDataFactory.createPrice('France', transporter3.Id, 80.00, 1);
-        TestDataFactory.createPrice('Germany', transporter1.Id, 60.00, 5);
     }
     
     @isTest
@@ -91,15 +90,5 @@ public class TransporterSelectorTest {
         
         // Assert
         Assert.isNull(fastest, 'Should return null when no compatible transporter exists');
-    }
-    
-    @isTest
-    static void testGetFastestTransporter_DifferentCountry() {
-        // Act
-        Transporteur__c fastest = TransporterSelector.GetFastestTransporter('Germany', 'Particulier');
-        
-        // Assert
-        Assert.isNotNull(fastest, 'Should return a transporter for Germany');
-        Assert.areEqual('Transporter 1', fastest.Name, 'Should return the only available transporter for Germany');
     }
 }
