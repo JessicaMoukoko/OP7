@@ -3,12 +3,12 @@ public class TransporterSelectorTest {
     
     @testSetup
     static void setupTestData() {
-        // Create test transporters
+        // Creation de transporteurs de test
         Transporteur__c transporter1 = TestDataFactory.createTransporter('Transporter 1', 'Particulier;Professionnel', 'T001');
         Transporteur__c transporter2 = TestDataFactory.createTransporter('Transporter 2', 'Particulier', 'T002');
         Transporteur__c transporter3 = TestDataFactory.createTransporter('Transporter 3', 'Professionnel', 'T003');
         
-        // Create test prices for France
+        // Creation de prix de test pour la France
         TestDataFactory.createPrice('France', transporter1.Id, 50.00, 2);
         TestDataFactory.createPrice('France', transporter2.Id, 30.00, 3);
         TestDataFactory.createPrice('France', transporter3.Id, 80.00, 1);
@@ -16,7 +16,7 @@ public class TransporterSelectorTest {
     
     @isTest
     static void testGetTransporterByCountry_Success() {
-        // Act
+        // test de la récupération des transporteurs disponibles pour la France et le type de compte Particulier
         Test.startTest();
         List<Transporteur__c> transporters = TransporterSelector.getTransporterByCountry('France','Particulier');
         Test.stopTest();
@@ -28,8 +28,10 @@ public class TransporterSelectorTest {
     
     @isTest
     static void testGetTransporterByCountry_NoResults() {
-        // Act
+        // test de la récupération des transporteurs pour un pays qui n'existe pas dans les données de test
+        Test.startTest();
         List<Transporteur__c> transporters = TransporterSelector.getTransporterByCountry('NonExistentCountry','Particulier');
+        Test.stopTest();
         
         // Assert
         Assert.isNotNull(transporters, 'List should not be null');
@@ -38,9 +40,10 @@ public class TransporterSelectorTest {
     
     @isTest
     static void testGetCheapestTransporter_Success() {
-        // Act
+        // test de la récupération du transporteur le moins cher pour la France et le type de compte Particulier
+        Test.startTest();
         Transporteur__c cheapest = TransporterSelector.GetCheapestTransporter('France', 'Particulier');
-        
+        Test.stopTest();
         // Assert
         Assert.isNotNull(cheapest, 'Should return a transporter');
         Assert.areEqual('Transporter 2', cheapest.Name, 'Should return the cheapest transporter');
@@ -48,8 +51,10 @@ public class TransporterSelectorTest {
     
     @isTest
     static void testGetCheapestTransporter_CompatibleType() {
-        // Act
+        // test de la récupération du transporteur le moins cher pour la France et le type de compte Professionnel
+        Test.startTest();
         Transporteur__c cheapest = TransporterSelector.GetCheapestTransporter('France', 'Professionnel');
+        Test.stopTest();
         
         // Assert
         Assert.isNotNull(cheapest, 'Should return a transporter for professional account type');
@@ -57,8 +62,10 @@ public class TransporterSelectorTest {
     
     @isTest
     static void testGetCheapestTransporter_NoCompatibleTransporter() {
-        // Act
+        // test de la récupération du transporteur le moins cher pour un pays qui n'existe pas dans les données de test
+        Test.startTest();
         Transporteur__c cheapest = TransporterSelector.GetCheapestTransporter('NonExistentCountry', 'Particulier');
+        Test.stopTest();
         
         // Assert
         Assert.isNull(cheapest, 'Should return null when no compatible transporter exists');
@@ -66,8 +73,10 @@ public class TransporterSelectorTest {
     
     @isTest
     static void testGetFastestTransporter_Success() {
-        // Act
+        // test de la récupération du transporteur le plus rapide pour la France et le type de compte Professionnel
+        Test.startTest();
         Transporteur__c fastest = TransporterSelector.GetFastestTransporter('France', 'Professionnel');
+        Test.stopTest();
         
         // Assert
         Assert.isNotNull(fastest, 'Should return a transporter');
@@ -76,8 +85,10 @@ public class TransporterSelectorTest {
     
     @isTest
     static void testGetFastestTransporter_CompatibleType() {
-        // Act
+        // test de la récupération du transporteur le plus rapide pour la France et le type de compte Particulier avec un compte compatible
+        Test.startTest();
         Transporteur__c fastest = TransporterSelector.GetFastestTransporter('France', 'Particulier');
+        Test.stopTest();
         
         // Assert
         Assert.isNotNull(fastest, 'Should return a transporter for Particulier account type');
@@ -85,7 +96,7 @@ public class TransporterSelectorTest {
     
     @isTest
     static void testGetFastestTransporter_NoCompatibleTransporter() {
-        // Act
+        // test de la récupération du transporteur le plus rapide pour un pays qui n'existe pas avec transporteur incompatible
         Transporteur__c fastest = TransporterSelector.GetFastestTransporter('NonExistentCountry', 'Particulier');
         
         // Assert

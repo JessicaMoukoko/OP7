@@ -2,11 +2,13 @@
 public class AccountSelectorTest {
     
     @isTest
+    // Test de la méthode getAccountById pour un compte existant
     public static void testGetAccountById_Success() {
-        // Arrange
+        
+        // création d'un compte de test
         Account testAccount = TestDataFactory.createAccount('Test Account', 'Particulier');
         
-        // Act
+        
         Test.startTest();
         Account AccountToTest = AccountSelector.getAccountById(testAccount.Id);
         Test.stopTest();
@@ -19,11 +21,12 @@ public class AccountSelectorTest {
     }
     
     @isTest
+    // Test de la méthode getAccountById pour un compte inexistant
     public static void testGetAccountById_Error() {
-        // Arrange
-        Id invalidId = '001XX000003DHPOQAW'; // Assuming this ID does not exist in the test context
+       
+        Id invalidId = '001XX000003DHPOQAW'; // cet ID n'existe pas dans la base de données de test
         
-        // Act & Assert
+    
        try {
             Account account = AccountSelector.getAccountById(invalidId);
             Assert.fail('Should throw an exception for invalid account ID');

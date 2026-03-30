@@ -3,34 +3,34 @@ public class OrderControllerTest {
     
     @testSetup
     static void setupTestData() {
-        // Create test products first
+        // Creation de produits de test
         Product2 product1 = TestDataFactory.createProduct('Test Product 1');
         Product2 product2 = TestDataFactory.createProduct('Test Product 2');
         Product2 product3 = TestDataFactory.createProduct('Test Product 3');
         Product2 product4 = TestDataFactory.createProduct('Test Product 4');
         Product2 product5 = TestDataFactory.createProduct('Test Product 5');
         
-        // Create test price book entry
+        // Creation de pricebook entries pour les produits
         PricebookEntry standardPBEntry = TestDataFactory.createPricebookEntry(
             Test.getStandardPricebookId(),
             product1.Id,
             100.00
         );
 
-        // Create more pricebook entries for all products
+        // Creation de pricebookentrys pour les produits
         TestDataFactory.createPricebookEntry(Test.getStandardPricebookId(), product2.Id, 100.00);
         TestDataFactory.createPricebookEntry(Test.getStandardPricebookId(), product3.Id, 100.00);
         TestDataFactory.createPricebookEntry(Test.getStandardPricebookId(), product4.Id, 100.00);
         TestDataFactory.createPricebookEntry(Test.getStandardPricebookId(), product5.Id, 100.00);
         
-        // Create test account
+        
         Account account = TestDataFactory.createAccount('Test Account', 'Particulier');
         
-        // Create order and items together within startTest/stopTest to manage trigger execution
+        // Creation d'une commande de test pour le compte
         Test.startTest();
         Order order = TestDataFactory.createOrder(account.Id, 'Draft');
         
-        // Create order items to satisfy validation
+        // Creation d'orderitems 
         TestDataFactory.createOrderItem(order.Id, product1.Id, standardPBEntry.Id, 1, 100.00);
         TestDataFactory.createOrderItem(order.Id, product2.Id, standardPBEntry.Id, 1, 100.00);
         TestDataFactory.createOrderItem(order.Id, product3.Id, standardPBEntry.Id, 1, 100.00);
@@ -39,13 +39,14 @@ public class OrderControllerTest {
     
     @isTest
     static void testGetOrderProducts_Success() {
-        // Arrange
+        
         Order order = [SELECT Id FROM Order LIMIT 1];
         
-        // Act
-        test.startTest();
+        // test de la récupération des produits d'une commande
+
+        Test.startTest();
         List<OrderItem> products = OrderController.getOrderProducts(order.Id);
-        test.stopTest();
+        Test.stopTest();
         
         // Assert
         Assert.isNotNull(products, 'Order products list should not be null');
@@ -54,14 +55,15 @@ public class OrderControllerTest {
     
     @isTest
     static void testGetOrderProducts_NoProducts() {
-        // Arrange
+        
         Account account = TestDataFactory.createAccount('Empty Order Account', 'Particulier');
         Order emptyOrder = TestDataFactory.createOrder(account.Id, 'Draft');
         
-        // Act
-        test.startTest();
+        // test de la récupération des produits d'une commande qui ne contient aucun produit
+
+        Test.startTest();
         List<OrderItem> products = OrderController.getOrderProducts(emptyOrder.Id);
-        test.stopTest();
+        Test.stopTest();
         
         // Assert
         Assert.isNotNull(products, 'List should not be null');
@@ -70,10 +72,11 @@ public class OrderControllerTest {
     
     @isTest
     static void testGetOrderProducts_FieldsAreCorrect() {
-        // Arrange
+       
         Order order = [SELECT Id FROM Order LIMIT 1];
         
-        // Act
+        // test de la récupération des produits d'une commande et vérification que les champs sont correctement renseignés
+
         List<OrderItem> products = OrderController.getOrderProducts(order.Id);
         
         // Assert
@@ -88,12 +91,13 @@ public class OrderControllerTest {
     
     @isTest
     static void testValidateOrder_ParticulierMinimumItems() {
-        // Arrange
+       
         Account account = TestDataFactory.createAccount('Particulier Account', 'Particulier');
         Order order = TestDataFactory.createOrder(account.Id, 'Draft');
 
         
-        // Create only 2 order items (less than minimum of 3)
+        // creation de seulement 2 commandes (moins que le minimum de 3 pour les particuliers)
+
         PricebookEntry pbe = [SELECT Id FROM PricebookEntry LIMIT 1];
         List<Product2> products = [SELECT Id FROM Product2 LIMIT 2];
         for (Product2 product : products) {
@@ -102,7 +106,7 @@ public class OrderControllerTest {
         
         Order orderToValidate = [SELECT Id, AccountId, Status FROM Order WHERE Id = :order.Id];
         
-        // Act & Assert
+        
         try {
             OrderController.validateOrder(orderToValidate);
             Assert.isTrue(orderToValidate.getErrors().size() > 0, 'Should have validation error for insufficient items');
@@ -111,13 +115,14 @@ public class OrderControllerTest {
         }
     }
     
-    @isTest
+    @isTest 
     static void testValidateOrder_ParticulierValidOrder() {
-        // Arrange
+        
         Account account = TestDataFactory.createAccount('Valid Particulier', 'Particulier');
         Order order = TestDataFactory.createOrder(account.Id, 'Draft');
         
-        // Create 3 order items (meets minimum requirement)
+        // Creation de 3 articles (minimum requis pour les particuliers)
+
         PricebookEntry pbe = [SELECT Id FROM PricebookEntry LIMIT 1];
         List<Product2> products = [SELECT Id FROM Product2 LIMIT 3];
         for (Product2 product : products) {
@@ -126,7 +131,7 @@ public class OrderControllerTest {
         
         Order orderToValidate = [SELECT Id, AccountId, Status FROM Order WHERE Id = :order.Id];
         
-        // Act & Assert
+        // try catch pour vérifier que la validation ne génère pas d'erreur pour une commande valide
         try {
             OrderController.validateOrder(orderToValidate);
             Assert.areEqual(0, orderToValidate.getErrors().size(), 'Valid order should have no errors');
@@ -137,11 +142,12 @@ public class OrderControllerTest {
     
     @isTest
     static void testValidateOrder_ProfessionnelMinimumItems() {
-        // Arrange
+        
         Account account = TestDataFactory.createAccount('Professionnel Account', 'Professionnel');
         Order order = TestDataFactory.createOrder(account.Id, 'Draft');
         
-        // Create only 3 order items (less than minimum of 5)
+        // Creation de 3 articles ( minimum requis 5 articles pour les professionnels)
+
         PricebookEntry pbe = [SELECT Id FROM PricebookEntry LIMIT 1];
         List<Product2> products = [SELECT Id FROM Product2 LIMIT 3];
         for (Product2 product : products) {
@@ -150,7 +156,7 @@ public class OrderControllerTest {
         
         Order orderToValidate = [SELECT Id, AccountId, Status FROM Order WHERE Id = :order.Id];
         
-        // Act & Assert
+        // try catch pour vérifier que la validation génère une erreur pour une commande professionnel avec moins de 5 articles
         try {
             OrderController.validateOrder(orderToValidate);
             Assert.isTrue(orderToValidate.getErrors().size() > 0, 'Should have validation error for professional account with less than 5 items');
@@ -161,11 +167,12 @@ public class OrderControllerTest {
     
     @isTest
     static void testValidateOrder_ProfessionnelValidOrder() {
-        // Arrange
+        
         Account account = TestDataFactory.createAccount('Valid Professionnel', 'Professionnel');
         Order order = TestDataFactory.createOrder(account.Id, 'Draft');
         
-        // Create 5 order items (meets minimum requirement)
+        // Creation de 5 articles ( 5 articles minimum requis pour les professionnels)
+
         PricebookEntry pbe = [SELECT Id FROM PricebookEntry LIMIT 1];
         List<Product2> products = [SELECT Id FROM Product2 LIMIT 5];
         for (Product2 product : products) {
@@ -174,7 +181,7 @@ public class OrderControllerTest {
         
         Order orderToValidate = [SELECT Id, AccountId, Status FROM Order WHERE Id = :order.Id];
         
-        // Act & Assert
+        // try catch pour vérifier que la validation ne génère pas d'erreur pour une commande professionnel valide
         try {
             OrderController.validateOrder(orderToValidate);
             Assert.areEqual(0, orderToValidate.getErrors().size(), 'Valid professional order should have no errors');

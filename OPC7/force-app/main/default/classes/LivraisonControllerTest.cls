@@ -3,17 +3,17 @@ public class LivraisonControllerTest {
     
     @testSetup
     static void setupTestData() {
-        // Create test account and order
+        // Creation d'un compte, d'une commande
         Account account = TestDataFactory.createAccount('Test Livraison Account', 'Particulier');
         Order order = TestDataFactory.createOrder(account.Id, 'Draft');
         order.status = 'Activated';
         
-        // Create test transporters with custom names
+        // Creation de transporteurs
         Transporteur__c transporter1 = TestDataFactory.createTransporter('Cheap Transporter', 'Particulier;Professionnel', 'CT001');
         Transporteur__c transporter2 = TestDataFactory.createTransporter('Fast Transporter', 'Particulier;Professionnel', 'FT001');
         Transporteur__c transporter3 = TestDataFactory.createTransporter('Premium Transporter', 'Particulier', 'PT001');
         
-        // Create test prices
+        // Creation de prix pour les transporteurs
         TestDataFactory.createPrice('France', transporter1.Id, 25.00, 5);
         TestDataFactory.createPrice('France', transporter2.Id, 50.00, 1);
         TestDataFactory.createPrice('France', transporter3.Id, 75.00, 2);
@@ -21,11 +21,11 @@ public class LivraisonControllerTest {
     
     @isTest
     static void testCreateLivraisonWithCheapestTransporter_Success() {
-        // Arrange
+        
         Order order = [SELECT Id, AccountId, Account.AccountType__c FROM Order LIMIT 1];
         Prix__c prix = [SELECT Id, Pays__c, Tarif__c FROM Prix__c WHERE Tarif__c = 25.00 LIMIT 1];
         
-        // Act
+        //test de la création d'une livraison avec le transporteur le moins cher
         Test.startTest();
         LivraisonController.createLivraisonWithCheapestTransporter(order, prix);
         Test.stopTest();
@@ -38,11 +38,11 @@ public class LivraisonControllerTest {
     
     @isTest
     static void testCreateLivraisonWithFastestTransporter_Success() {
-        // Arrange
+        
         Order order = [SELECT Id, AccountId, Account.AccountType__c FROM Order LIMIT 1];
         Prix__c prix = [SELECT Id, Pays__c, Delai_De_Livraison__c FROM Prix__c WHERE Delai_De_Livraison__c = 1 LIMIT 1];
         
-        // Act
+        // test de la création d'une livraison avec le transporteur le plus rapide
         Test.startTest();
         LivraisonController.createLivraisonWithFastestTransporter(order, prix);
         Test.stopTest();
@@ -55,11 +55,11 @@ public class LivraisonControllerTest {
     
     @isTest
     static void testCreateLivraisonWithSelectedTransporter_Success() {
-        // Arrange
+        
         Order order = [SELECT Id, AccountId, Account.AccountType__c FROM Order LIMIT 1];
         Prix__c prix = [SELECT Id, Pays__c FROM Prix__c LIMIT 1];
         
-        // Act
+        // test de la création d'une livraison avec un transporteur sélectionné
         Test.startTest();
         LivraisonController.createLivraisonWithSelectedTransporter(order, prix);
         Test.stopTest();
@@ -75,7 +75,7 @@ public class LivraisonControllerTest {
         // Arrange
         Order order = [SELECT Id FROM Order LIMIT 1];
         
-        // Act
+        // test de la création d'une livraison avec le transporteur le moins cher à partir de l'ID de la commande
         Test.startTest();
         LivraisonController.createCheapestLivraisonFromOrderId(order.Id);
         Test.stopTest();
@@ -92,7 +92,8 @@ public class LivraisonControllerTest {
         // Arrange
         Order order = [SELECT Id FROM Order LIMIT 1];
         
-        // Act
+        // test de la création d'une livraison avec le transporteur le plus rapide à partir de l'ID de la commande
+        
         Test.startTest();
         LivraisonController.createFastestLivraisonFromOrderId(order.Id);
         Test.stopTest();
@@ -109,7 +110,8 @@ public class LivraisonControllerTest {
         Order order = [SELECT Id, AccountId, Account.AccountType__c FROM Order LIMIT 1];
         Prix__c prix = [SELECT Id, Pays__c FROM Prix__c LIMIT 1];
         
-        // Act
+        // test de la création d'une livraison et vérification que les champs sont correctement renseignés
+         
         Test.startTest();
         LivraisonController.createLivraisonWithCheapestTransporter(order, prix);
         Test.stopTest();
@@ -145,7 +147,7 @@ public class LivraisonControllerTest {
                 100,
                 3
             );
-
+       // test de la création d'une livraison avec un transporteur sélectionné
             Test.startTest();
 
             LivraisonController.createSelectedLivraisonFromOrderId(
@@ -170,8 +172,9 @@ public class LivraisonControllerTest {
     static void testCreateLivraison_noPrix() {
 
         User user = TestDataFactory.createUser();
-
+     
         System.runAs(user) {
+       
 
             Account acc = TestDataFactory.createAccount('Test Account', 'Professionnel');
             Order ord = TestDataFactory.createOrder(acc.Id, 'Draft');
@@ -182,7 +185,7 @@ public class LivraisonControllerTest {
                 'TR001'
             );
 
-
+        // test de la création d'une livraison avec un transporteur sélectionné mais sans prix défini
             Test.startTest();
 
             try {

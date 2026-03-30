@@ -27,6 +27,7 @@ public class TestDataFactory {
     return user ;
 
     }
+      // Crée un compte de test avec les champs requis
 
     public static Account createAccount(String name, String accountType) {
         Account account = new Account(
@@ -42,7 +43,8 @@ public class TestDataFactory {
         return account;
     }
     
-   
+     // Crée un transporteur de test avec les champs requis
+
     public static Transporteur__c createTransporter(String name, String typeClient, String identifiant) {
       Transporteur__c transporter = new Transporteur__c(
             Name = name,
@@ -53,7 +55,8 @@ public class TestDataFactory {
         return transporter;
     }
     
-    
+    // Crée une entrée de prix de test pour un pays et un transporteur donnés
+
     public static Prix__c createPrice(String country, Id transporterId, Decimal price, Integer deliveryDays) {
         Prix__c priceEntry = new Prix__c(
             Pays__c = country,
@@ -65,7 +68,8 @@ public class TestDataFactory {
         return priceEntry;
     }
     
-    
+    // Crée une commande de test avec les champs requis
+
     public static Order createOrder(Id accountId, String status) {
         Order order =   new Order(
             AccountId = accountId,
@@ -80,7 +84,8 @@ public class TestDataFactory {
         insert order;
         return order;
     }
-   
+   // Crée un produit de test avec les champs requis
+
     public static Product2 createProduct(String name) {
         Product2 product = new Product2(
             Name = name,
@@ -89,7 +94,8 @@ public class TestDataFactory {
         insert product;
         return product;
     }
-    
+    // Crée une entrée de catalogue de test pour un produit donné dans un catalogue donné
+
     public static PricebookEntry createPricebookEntry(Id pricebookId, Id productId, Decimal unitPrice) {
         PricebookEntry entry = new PricebookEntry(
             Pricebook2Id = pricebookId,
@@ -100,7 +106,8 @@ public class TestDataFactory {
         insert entry;
         return entry;
     }
-    
+    // Méthode pour créer un élément de commande de test avec les champs requis
+
     public static OrderItem createOrderItem(Id orderId, Id productId, Id pricebookEntryId, Integer quantity, Decimal unitPrice) {
         OrderItem item = new OrderItem(
             OrderId = orderId,
@@ -133,11 +140,11 @@ public class TestDataFactory {
    PermissionSetAssignment psa = new PermissionSetAssignment(
     AssigneeId = userId,
     PermissionSetId = ps.Id
-   );
+       );
 
-insert psa;
-return psa;
-}
+       insert psa;
+       return psa;
+   }
 
 }
 
